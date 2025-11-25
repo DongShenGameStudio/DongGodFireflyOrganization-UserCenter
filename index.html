@@ -1,110 +1,358 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <title>东神网络科技服务 - 本地登录 Demo</title>
-  <style>
-    html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
-    body{display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
-    .card{background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:40px;width:320px;text-align:center;}
-    h2{margin-bottom:25px;color:#333;}
-    input{width:100%;padding:12px;margin:8px 0;border:1px solid #ccc;border-radius:6px;font-size:14px;}
-    button{width:100%;padding:12px;margin-top:15px;border:none;border-radius:6px;background:#667eea;color:#fff;font-size:16px;cursor:pointer;}
-    button:hover{background:#5a67d8;}
-    #userInfo{display:none;margin-top:20px;text-align:left;}
-    #userInfo div{margin:6px 0;}
-    .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>东神网络科技服务</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #4a6491;
+            outline: none;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .login-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .user-info {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .user-info h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .user-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            margin-top: 20px;
+        }
+        
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #4a6491;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <!-- 登录弹窗 -->
-  <div id="loginBox" class="mask">
-    <div class="card">
-      <h2>用户登录</h2>
-      <input id="ident" placeholder="手机号 / 邮箱" />
-      <input id="pwd" type="password" placeholder="密码" />
-      <button onclick="doLogin()">登 录</button>
-      <p id="tip" style="color:#e53e3e;margin-top:10px;"></p>
+    <div class="container">
+        <div class="header">
+            <h1>东神网络科技服务</h1>
+            <p>安全、高效、可靠的服务平台</p>
+        </div>
+        
+        <div class="content">
+            <div class="user-info" id="userInfo">
+                <h2>欢迎回来！</h2>
+                <div class="user-details">
+                    <p><strong>用户编号：</strong> <span id="userNumber">-</span></p>
+                    <p><strong>昵称：</strong> <span id="userNickname">-</span></p>
+                    <p><strong>中国币余额：</strong> <span id="userCurrency">-</span></p>
+                </div>
+                <button class="btn logout-btn" id="logoutBtn">退出登录</button>
+            </div>
+            
+            <div id="loginFormContainer">
+                <form class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="username">手机号或邮箱：</label>
+                        <input type="text" id="username" placeholder="请输入手机号或邮箱" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">密码：</label>
+                        <input type="password" id="password" placeholder="请输入密码" required>
+                    </div>
+                    
+                    <button type="submit" class="btn">登录</button>
+                </form>
+                
+                <div class="login-message" id="loginMessage"></div>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <!-- 主界面 -->
-  <div class="card" id="mainPage" style="display:none;">
-    <h2>欢迎回来</h2>
-    <div id="userInfo">
-      <div><strong>UID：</strong><span id="uid"></span></div>
-      <div><strong>昵称：</strong><span id="nick"></span></div>
-      <div><strong>China币：</strong><span id="money"></span></div>
+    
+    <div class="login-modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>用户登录</h2>
+            </div>
+            <div class="modal-body">
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>正在验证用户信息...</p>
+                </div>
+                
+                <div id="loginResult" class="hidden">
+                    <div class="login-message success" id="successMessage">
+                        登录成功！正在跳转...
+                    </div>
+                    <div class="login-message error" id="errorMessage">
+                        登录失败，请检查您的用户名和密码！
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <button onclick="doLogout()">退出登录</button>
-  </div>
 
-<script src="DongGodNetworkTechnologyServices-InformationRelayStation.js"></script>
-<script src="DongGodNetworkTechnologyServiceAPI.js"></script>
-<script>
-(async ()=>{
-  await DongGodAPI.init();          // 拉表
-  if (await getStoredLogin()) {     // 曾经登录过
-    showMain();
-  } else {
-    document.getElementById('loginBox').style.display='flex';
-  }
-})();
-
-async function doLogin(){
-  const ident=document.getElementById('ident').value.trim();
-  const pwd=document.getElementById('pwd').value;
-  const tip=document.getElementById('tip');
-  if(!ident||!pwd)return tip.textContent='请完整输入';
-  const r=await DongGodAPI.login(ident,pwd);
-  if(!r.ok)return tip.textContent=r.msg;
-  // 成功
-  await storeLogin(r);        // 存 IndexedDB
-  document.getElementById('uid').textContent=r.uid;
-  document.getElementById('nick').textContent=r.nick;
-  document.getElementById('money').textContent=r.money;
-  showMain();
-}
-function showMain(){
-  document.getElementById('loginBox').style.display='none';
-  document.getElementById('mainPage').style.display='block';
-}
-async function doLogout(){
-  await clearStoredLogin();
-  location.reload();
-}
-
-/* ===== IndexedDB 工具 ===== */
-const DB_NAME='DongGodLocal',STORE_NAME='login',VERSION=1;
-let dbInst;
-async function openDB(){
-  return new Promise((res,rej)=>{
-    const req=indexedDB.open(DB_NAME,VERSION);
-    req.onerror=()=>rej(req.error);
-    req.onsuccess=()=>res(req.result);
-    req.onupgradeneeded=()=>{
-      const db=req.result;
-      if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME);
-    };
-  });
-}
-async function storeLogin(data){
-  dbInst=dbInst||await openDB();
-  const tx=dbInst.transaction(STORE_NAME,'readwrite');
-  tx.objectStore(STORE_NAME).put(data,'login');
-  return tx.complete;
-}
-async function getStoredLogin(){
-  dbInst=dbInst||await openDB();
-  const tx=dbInst.transaction(STORE_NAME);
-  return tx.objectStore(STORE_NAME).get('login');
-}
-async function clearStoredLogin(){
-  dbInst=dbInst||await openDB();
-  const tx=dbInst.transaction(STORE_NAME,'readwrite');
-  tx.objectStore(STORE_NAME).delete('login');
-  return tx.complete;
-}
-</script>
+    <script>
+        // 检查是否已登录
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInfo = localStorage.getItem('userInfo');
+            
+            if (userInfo) {
+                // 用户已登录
+                const userData = JSON.parse(userInfo);
+                showUserInfo(userData);
+            } else {
+                // 显示登录弹窗
+                document.getElementById('loginModal').classList.remove('hidden');
+            }
+            
+            // 登录表单提交
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                // 显示加载状态
+                document.getElementById('loginModal').classList.remove('hidden');
+                document.getElementById('loadingIndicator').classList.remove('hidden');
+                document.getElementById('loginResult').classList.add('hidden');
+                
+                // 模拟登录验证
+                setTimeout(() => {
+                    verifyLogin(username, password);
+                }, 1500);
+            });
+            
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                localStorage.removeItem('userInfo');
+                location.reload();
+            });
+        });
+        
+        // 验证登录
+        async function verifyLogin(username, password) {
+            try {
+                // 加载API脚本
+                await loadScript('https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/DongGodNetworkTechnologyServiceAPI.js');
+                
+                // 验证用户信息
+                const userData = await DongGodNetworkTechnologyServiceAPI.verifyUser(username, password);
+                
+                if (userData) {
+                    // 登录成功
+                    localStorage.setItem('userInfo', JSON.stringify(userData));
+                    
+                    document.getElementById('loadingIndicator').classList.add('hidden');
+                    document.getElementById('successMessage').classList.remove('hidden');
+                    document.getElementById('loginResult').classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        document.getElementById('loginModal').classList.add('hidden');
+                        showUserInfo(userData);
+                    }, 1500);
+                } else {
+                    // 登录失败
+                    document.getElementById('loadingIndicator').classList.add('hidden');
+                    document.getElementById('errorMessage').classList.remove('hidden');
+                    document.getElementById('loginResult').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('登录验证失败:', error);
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                document.getElementById('errorMessage').classList.remove('hidden');
+                document.getElementById('loginResult').classList.remove('hidden');
+            }
+        }
+        
+        // 显示用户信息
+        function showUserInfo(userData) {
+            document.getElementById('loginFormContainer').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'block';
+            
+            document.getElementById('userNumber').textContent = userData.number;
+            document.getElementById('userNickname').textContent = userData.nickname;
+            document.getElementById('userCurrency').textContent = userData.currency;
+        }
+        
+        // 动态加载脚本
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+    </script>
 </body>
 </html>
