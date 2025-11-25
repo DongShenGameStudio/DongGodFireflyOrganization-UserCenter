@@ -186,6 +186,39 @@
             margin-bottom: 5px;
             padding: 5px;
         }
+        
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -259,6 +292,18 @@
     </div>
 
     <script>
+        // 远程JSON文件地址
+        const JSON_URLS = {
+            phoneToNumber: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/UserMobilePhoneNumberCorrespondingNumberTable.json",
+            emailToNumber: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/UserEmailAddressNumberToNumberTable.json",
+            numberToPassword: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/Number-To-PasswordTable.json",
+            numberToNickname: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/NicknameOfTheUserCorrespondingToTheNumber.json",
+            numberToCurrency: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/ChineseCurrencyCorrespondingToTheNumber.json"
+        };
+
+        // 用户数据缓存
+        let userData = null;
+        
         // 检查是否已登录
         document.addEventListener('DOMContentLoaded', function() {
             const userInfo = localStorage.getItem('userInfo');
@@ -291,18 +336,66 @@
             });
         });
         
+        // 加载用户数据
+        async function loadUserData() {
+            if (userData) return userData;
+            
+            try {
+                // 加载所有JSON数据
+                const responses = await Promise.all(Object.values(JSON_URLS).map(url => fetch(url)));
+                const data = await Promise.all(responses.map(response => response.json()));
+                
+                // 存储数据
+                userData = {
+                    phoneToNumber: data[0],
+                    emailToNumber: data[1],
+                    numberToPassword: data[2],
+                    numberToNickname: data[3],
+                    numberToCurrency: data[4]
+                };
+                
+                return userData;
+            } catch (error) {
+                console.error('加载用户数据失败:', error);
+                throw new Error('无法加载用户数据');
+            }
+        }
+        
         // 验证登录
         async function verifyLogin(username, password) {
             try {
-                // 加载API脚本
-                await loadScript('DongGodNetworkTechnologyServiceAPI.js');
+                const data = await loadUserData();
                 
-                // 验证用户信息
-                const userData = await DongGodNetworkTechnologyServiceAPI.verifyUser(username, password);
+                // 获取用户编号
+                let userNumber = null;
                 
-                if (userData) {
+                // 检查是手机号还是邮箱
+                if (username.includes('@')) {
+                    // 邮箱登录
+                    userNumber = data.emailToNumber[username];
+                } else {
+                    // 手机号登录
+                    userNumber = data.phoneToNumber[username];
+                }
+                
+                if (!userNumber) {
+                    throw new Error('用户不存在');
+                }
+                
+                // 验证密码（明文比较）
+                if (data.numberToPassword[userNumber] === password) {
+                    // 获取用户信息
+                    const nickname = data.numberToNickname[userNumber] || '未知用户';
+                    const currency = data.numberToCurrency[userNumber] || '0';
+                    
+                    const userInfo = {
+                        number: userNumber,
+                        nickname: nickname,
+                        currency: currency
+                    };
+                    
                     // 登录成功
-                    localStorage.setItem('userInfo', JSON.stringify(userData));
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
                     
                     document.getElementById('loadingIndicator').classList.add('hidden');
                     document.getElementById('successMessage').classList.remove('hidden');
@@ -310,13 +403,10 @@
                     
                     setTimeout(() => {
                         document.getElementById('loginModal').classList.add('hidden');
-                        showUserInfo(userData);
+                        showUserInfo(userInfo);
                     }, 1500);
                 } else {
-                    // 登录失败
-                    document.getElementById('loadingIndicator').classList.add('hidden');
-                    document.getElementById('errorMessage').classList.remove('hidden');
-                    document.getElementById('loginResult').classList.remove('hidden');
+                    throw new Error('密码错误');
                 }
             } catch (error) {
                 console.error('登录验证失败:', error);
@@ -334,17 +424,6 @@
             document.getElementById('userNumber').textContent = userData.number;
             document.getElementById('userNickname').textContent = userData.nickname;
             document.getElementById('userCurrency').textContent = userData.currency;
-        }
-        
-        // 动态加载脚本
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
         }
     </script>
 </body>
