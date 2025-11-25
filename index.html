@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>东神网络科技服务 - 本地登录 Demo</title>
+  <style>
+    html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+    body{display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
+    .card{background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:40px;width:320px;text-align:center;}
+    h2{margin-bottom:25px;color:#333;}
+    input{width:100%;padding:12px;margin:8px 0;border:1px solid #ccc;border-radius:6px;font-size:14px;}
+    button{width:100%;padding:12px;margin-top:15px;border:none;border-radius:6px;background:#667eea;color:#fff;font-size:16px;cursor:pointer;}
+    button:hover{background:#5a67d8;}
+    #userInfo{display:none;margin-top:20px;text-align:left;}
+    #userInfo div{margin:6px 0;}
+    .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center;}
+  </style>
+</head>
+<body>
+  <!-- 登录弹窗 -->
+  <div id="loginBox" class="mask">
+    <div class="card">
+      <h2>用户登录</h2>
+      <input id="ident" placeholder="手机号 / 邮箱" />
+      <input id="pwd" type="password" placeholder="密码" />
+      <button onclick="doLogin()">登 录</button>
+      <p id="tip" style="color:#e53e3e;margin-top:10px;"></p>
+    </div>
+  </div>
+
+  <!-- 主界面 -->
+  <div class="card" id="mainPage" style="display:none;">
+    <h2>欢迎回来</h2>
+    <div id="userInfo">
+      <div><strong>UID：</strong><span id="uid"></span></div>
+      <div><strong>昵称：</strong><span id="nick"></span></div>
+      <div><strong>China币：</strong><span id="money"></span></div>
+    </div>
+    <button onclick="doLogout()">退出登录</button>
+  </div>
+
+<script src="DongGodNetworkTechnologyServices-InformationRelayStation.js"></script>
+<script src="DongGodNetworkTechnologyServiceAPI.js"></script>
+<script>
+(async ()=>{
+  await DongGodAPI.init();          // 拉表
+  if (await getStoredLogin()) {     // 曾经登录过
+    showMain();
+  } else {
+    document.getElementById('loginBox').style.display='flex';
+  }
+})();
+
+async function doLogin(){
+  const ident=document.getElementById('ident').value.trim();
+  const pwd=document.getElementById('pwd').value;
+  const tip=document.getElementById('tip');
+  if(!ident||!pwd)return tip.textContent='请完整输入';
+  const r=await DongGodAPI.login(ident,pwd);
+  if(!r.ok)return tip.textContent=r.msg;
+  // 成功
+  await storeLogin(r);        // 存 IndexedDB
+  document.getElementById('uid').textContent=r.uid;
+  document.getElementById('nick').textContent=r.nick;
+  document.getElementById('money').textContent=r.money;
+  showMain();
+}
+function showMain(){
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('mainPage').style.display='block';
+}
+async function doLogout(){
+  await clearStoredLogin();
+  location.reload();
+}
+
+/* ===== IndexedDB 工具 ===== */
+const DB_NAME='DongGodLocal',STORE_NAME='login',VERSION=1;
+let dbInst;
+async function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,VERSION);
+    req.onerror=()=>rej(req.error);
+    req.onsuccess=()=>res(req.result);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME);
+    };
+  });
+}
+async function storeLogin(data){
+  dbInst=dbInst||await openDB();
+  const tx=dbInst.transaction(STORE_NAME,'readwrite');
+  tx.objectStore(STORE_NAME).put(data,'login');
+  return tx.complete;
+}
+async function getStoredLogin(){
+  dbInst=dbInst||await openDB();
+  const tx=dbInst.transaction(STORE_NAME);
+  return tx.objectStore(STORE_NAME).get('login');
+}
+async function clearStoredLogin(){
+  dbInst=dbInst||await openDB();
+  const tx=dbInst.transaction(STORE_NAME,'readwrite');
+  tx.objectStore(STORE_NAME).delete('login');
+  return tx.complete;
+}
+</script>
+</body>
+</html>
