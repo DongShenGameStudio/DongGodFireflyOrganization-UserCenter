@@ -103,7 +103,6 @@
             padding: 10px;
             border-radius: 5px;
             text-align: center;
-            display: none;
         }
         
         .success {
@@ -119,7 +118,6 @@
         }
         
         .user-info {
-            display: none;
             text-align: center;
             padding: 20px;
         }
@@ -207,7 +205,7 @@
         </div>
         
         <div class="content">
-            <div class="user-info" id="userInfo">
+            <div class="user-info hidden" id="userInfo">
                 <h2>欢迎回来！</h2>
                 <div class="user-details">
                     <p><strong>用户编号：</strong> <span id="userNumber">-</span></p>
@@ -232,12 +230,12 @@
                     <button type="submit" class="btn">登录</button>
                 </form>
                 
-                <div class="login-message" id="loginMessage"></div>
+                <div class="login-message hidden" id="loginMessage"></div>
             </div>
         </div>
     </div>
     
-    <div class="login-modal" id="loginModal">
+    <div class="login-modal hidden" id="loginModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>用户登录</h2>
@@ -249,10 +247,10 @@
                 </div>
                 
                 <div id="loginResult" class="hidden">
-                    <div class="login-message success" id="successMessage">
+                    <div class="login-message success hidden" id="successMessage">
                         登录成功！正在跳转...
                     </div>
-                    <div class="login-message error" id="errorMessage">
+                    <div class="login-message error hidden" id="errorMessage">
                         登录失败，请检查您的用户名和密码！
                     </div>
                 </div>
@@ -269,9 +267,6 @@
                 // 用户已登录
                 const userData = JSON.parse(userInfo);
                 showUserInfo(userData);
-            } else {
-                // 显示登录弹窗
-                document.getElementById('loginModal').classList.remove('hidden');
             }
             
             // 登录表单提交
@@ -285,10 +280,8 @@
                 document.getElementById('loadingIndicator').classList.remove('hidden');
                 document.getElementById('loginResult').classList.add('hidden');
                 
-                // 模拟登录验证
-                setTimeout(() => {
-                    verifyLogin(username, password);
-                }, 1500);
+                // 登录验证
+                verifyLogin(username, password);
             });
             
             // 退出登录
@@ -302,7 +295,7 @@
         async function verifyLogin(username, password) {
             try {
                 // 加载API脚本
-                await loadScript('https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/DongGodNetworkTechnologyServiceAPI.js');
+                await loadScript('DongGodNetworkTechnologyServiceAPI.js');
                 
                 // 验证用户信息
                 const userData = await DongGodNetworkTechnologyServiceAPI.verifyUser(username, password);
@@ -336,7 +329,7 @@
         // 显示用户信息
         function showUserInfo(userData) {
             document.getElementById('loginFormContainer').style.display = 'none';
-            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userInfo').classList.remove('hidden');
             
             document.getElementById('userNumber').textContent = userData.number;
             document.getElementById('userNickname').textContent = userData.nickname;
