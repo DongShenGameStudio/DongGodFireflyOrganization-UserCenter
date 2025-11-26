@@ -3,99 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>东神网络科技服务</title>
+    <title>用户中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Microsoft YaHei', sans-serif;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #0d47a1;
+            --primary-light: #5472d3;
+            --primary-dark: #002171;
+            --secondary: #ff6f00;
+            --secondary-light: #ff9f40;
+            --secondary-dark: #c43e00;
+            --background: #f5f7fa;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
         }
         
         body {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--text);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
         }
         
-        .container {
+        /* 顶部导航栏样式 */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 500px;
+            height: 70px;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            z-index: 1000;
         }
         
-        .header {
-            background: linear-gradient(to right, #2c3e50, #4a6491);
-            color: white;
-            padding: 20px;
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-img {
+            height: 40px;
+            width: auto;
+            margin-right: 15px;
+        }
+        
+        .header-title {
+            font-size: 30px; /* 增大字体 */
+            font-weight: 700; /* 加粗 */
+            color: var(--primary);
+            text-align: center; /* 文字居中 */
+            flex: 1; /* 占据剩余空间 */
+            margin: 0 20px; /* 左右边距 */
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            margin-top: 70px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 70px);
+        }
+        
+        .cards-container {
+            display: flex;
+            gap: 25px;
+            max-width: 1000px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 400px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-header h2 {
+            font-size: 20px;
+            color: var(--primary);
+        }
+        
+        /* 用户信息卡片样式 */
+        .user-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
         }
         
-        .header h1 {
-            font-size: 24px;
+        .user-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .user-name {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary);
             margin-bottom: 5px;
         }
         
-        .header p {
-            font-size: 14px;
-            opacity: 0.8;
+        .user-id {
+            font-size: 16px;
+            color: var(--text-light);
+            margin-bottom: 25px;
         }
         
-        .content {
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 25px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logout-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .logout-btn i {
+            margin-right: 8px;
+        }
+        
+        /* 资产卡片样式 */
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 24px;
+            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stat-info h3 {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+        
+        .stat-info p {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .top-header {
+                padding: 0 15px;
+            }
+            
+            .header-title {
+                font-size: 50px; /* 在小屏幕上适当减小字体 */
+            }
+            
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .card {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+        
+        /* 登录表单样式 */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
             padding: 30px;
         }
         
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        .login-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .login-logo {
+            max-width: 200px;
+            height: auto;
+            margin: 0 auto 15px;
+        }
+        
+        .login-header p {
+            color: var(--text-light);
+            font-size: 14px;
         }
         
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            margin-bottom: 20px;
         }
         
-        label {
-            font-weight: bold;
-            color: #333;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
         }
         
-        input {
+        .form-group input {
+            width: 100%;
             padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
             font-size: 16px;
             transition: border-color 0.3s;
         }
         
-        input:focus {
-            border-color: #4a6491;
+        .form-group input:focus {
+            border-color: var(--primary);
             outline: none;
         }
         
-        .btn {
-            background: linear-gradient(to right, #2c3e50, #4a6491);
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
             color: white;
             border: none;
-            padding: 14px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
         }
         
-        .btn:hover {
+        .login-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none;
         }
         
         .login-message {
@@ -117,119 +335,83 @@
             border: 1px solid #f5c6cb;
         }
         
-        .user-info {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .user-info h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-        
-        .user-details {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            text-align: left;
-        }
-        
-        .logout-btn {
-            background: #dc3545;
-            margin-top: 20px;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top: 4px solid #4a6491;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .test-accounts {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
-        .test-accounts h3 {
-            margin-bottom: 10px;
-            color: #495057;
-        }
-        
-        .test-accounts ul {
-            list-style-type: none;
-            text-align: left;
-        }
-        
-        .test-accounts li {
-            margin-bottom: 5px;
-            padding: 5px;
-        }
+        .login-subtitle {
+    font-size: 56px !important;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 8px 0 0 0;
+}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>东神网络科技服务</h1>
-            <p>安全、高效、可靠的服务平台</p>
-        </div>
-        
-        <div class="content">
-            <div class="user-info hidden" id="userInfo">
-                <h2>欢迎回来！</h2>
-                <div class="user-details">
-                    <p><strong>用户编号：</strong> <span id="userNumber">-</span></p>
-                    <p><strong>昵称：</strong> <span id="userNickname">-</span></p>
-                    <p><strong>CN币：</strong> <span id="userCurrency">-</span></p>
-                </div>
-                <button class="btn logout-btn" id="logoutBtn">退出登录</button>
+    <!-- 登录页面 -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <img src="https://s21.ax1x.com/2025/11/26/pZABSfJ.png" alt="东神萤火组织" class="login-logo">
+                <p class="login-subtitle">用户中心</p>
             </div>
             
-            <div id="loginFormContainer">
-                <form class="login-form" id="loginForm">
-                    <div class="form-group">
-                        <label for="username">手机号或邮箱：</label>
-                        <input type="text" id="username" placeholder="请输入手机号或邮箱" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">密码：</label>
-                        <input type="password" id="password" placeholder="请输入密码" required>
-                    </div>
-                    
-                    <button type="submit" class="btn">登录</button>
-                </form>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">手机号或邮箱：</label>
+                    <input type="text" id="username" placeholder="请输入手机号或邮箱" required>
+                </div>
                 
-                <div class="login-message hidden" id="loginMessage"></div>
+                <div class="form-group">
+                    <label for="password">密码：</label>
+                    <input type="password" id="password" placeholder="请输入密码" required>
+                </div>
                 
-                <div class="test-accounts">
-                    <h3>测试账户：</h3>
-                    <ul>
-                        <li><strong>手机号:</strong> 13800138000 <strong>密码:</strong> password</li>
-                        <li><strong>邮箱:</strong> user1@example.com <strong>密码:</strong> password</li>
-                        <li><strong>手机号:</strong> 15000150000 <strong>密码:</strong> password</li>
-                    </ul>
+                <button type="submit" class="login-btn">登录</button>
+            </form>
+            
+            <div id="loginMessage" class="hidden"></div>
+        </div>
+    </div>
+    
+    <!-- 用户中心页面 -->
+    <div id="dashboardPage" class="hidden">
+        <!-- 顶部导航栏 -->
+        <div class="top-header">
+            <div class="logo">
+                <img src="https://s21.ax1x.com/2025/11/26/pZABSfJ.png" alt="东神萤火组织" class="logo-img">
+            </div>
+            <div class="header-title">用户中心</div>
+            <!-- 右侧留空以保持平衡 -->
+            <div style="width: 40px;"></div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="cards-container">
+                <!-- 用户信息卡片 -->
+                <div class="card user-card">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-name" id="userNickname">东神工作室</div>
+                    <div class="user-id">UID: <span id="userNumber">10005</span></div>
+                    <button class="logout-btn" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>退出登录</span>
+                    </button>
+                </div>
+                
+                <!-- 资产卡片 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>资产概览</h2>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>CN币</h3>
+                            <p id="userCurrency">8,888</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -248,14 +430,17 @@
         // 用户数据缓存
         let userData = null;
         
-        // 检查是否已登录
+        // 页面加载时检查登录状态
         document.addEventListener('DOMContentLoaded', function() {
             const userInfo = localStorage.getItem('userInfo');
             
             if (userInfo) {
-                // 用户已登录
+                // 用户已登录，显示用户中心
                 const userData = JSON.parse(userInfo);
-                showUserInfo(userData);
+                showDashboard(userData);
+            } else {
+                // 用户未登录，显示登录页面
+                showLoginPage();
             }
             
             // 登录表单提交
@@ -276,9 +461,26 @@
             // 退出登录
             document.getElementById('logoutBtn').addEventListener('click', function() {
                 localStorage.removeItem('userInfo');
-                location.reload();
+                showLoginPage();
             });
         });
+        
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('dashboardPage').classList.add('hidden');
+        }
+        
+        // 显示用户中心
+        function showDashboard(userData) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboardPage').classList.remove('hidden');
+            
+            // 更新用户信息
+            document.getElementById('userNickname').textContent = userData.nickname;
+            document.getElementById('userNumber').textContent = userData.number;
+            document.getElementById('userCurrency').textContent = userData.currency.toLocaleString();
+        }
         
         // 加载用户数据
         async function loadUserData() {
@@ -345,8 +547,7 @@
                     document.getElementById('loginMessage').textContent = '登录成功！';
                     
                     setTimeout(() => {
-                        document.getElementById('loginMessage').classList.add('hidden');
-                        showUserInfo(userInfo);
+                        showDashboard(userInfo);
                     }, 1500);
                 } else {
                     throw new Error('密码错误');
@@ -356,16 +557,6 @@
                 document.getElementById('loginMessage').className = 'login-message error';
                 document.getElementById('loginMessage').textContent = '登录失败，请检查您的用户名和密码！';
             }
-        }
-        
-        // 显示用户信息
-        function showUserInfo(userData) {
-            document.getElementById('loginFormContainer').style.display = 'none';
-            document.getElementById('userInfo').classList.remove('hidden');
-            
-            document.getElementById('userNumber').textContent = userData.number;
-            document.getElementById('userNickname').textContent = userData.nickname;
-            document.getElementById('userCurrency').textContent = userData.currency;
         }
     </script>
 </body>
