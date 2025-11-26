@@ -292,17 +292,34 @@
     </div>
 
     <script>
-        // 远程JSON文件地址
-        const JSON_URLS = {
-            phoneToNumber: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/UserMobilePhoneNumberCorrespondingNumberTable.json",
-            emailToNumber: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/UserEmailAddressNumberToNumberTable.json",
-            numberToPassword: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/Number-To-PasswordTable.json",
-            numberToNickname: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/NicknameOfTheUserCorrespondingToTheNumber.json",
-            numberToCurrency: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/ChineseCurrencyCorrespondingToTheNumber.json"
+        // 直接嵌入用户数据，避免网络请求
+        const userData = {
+            phoneToNumber: {
+                "13800138000": "10001",
+                "13900139000": "10002",
+                "15000150000": "10003"
+            },
+            emailToNumber: {
+                "user1@example.com": "10001",
+                "user2@example.com": "10002",
+                "user3@example.com": "10003"
+            },
+            numberToPassword: {
+                "10001": "password",
+                "10002": "password",
+                "10003": "password"
+            },
+            numberToNickname: {
+                "10001": "东神用户1",
+                "10002": "东神用户2",
+                "10003": "东神用户3"
+            },
+            numberToCurrency: {
+                "10001": "1500",
+                "10002": "2800",
+                "10003": "5000"
+            }
         };
-
-        // 用户数据缓存
-        let userData = null;
         
         // 检查是否已登录
         document.addEventListener('DOMContentLoaded', function() {
@@ -325,8 +342,10 @@
                 document.getElementById('loadingIndicator').classList.remove('hidden');
                 document.getElementById('loginResult').classList.add('hidden');
                 
-                // 登录验证
-                verifyLogin(username, password);
+                // 立即验证登录，无需网络请求
+                setTimeout(() => {
+                    verifyLogin(username, password);
+                }, 800); // 短暂延迟，让用户看到加载动画
             });
             
             // 退出登录
@@ -336,46 +355,19 @@
             });
         });
         
-        // 加载用户数据
-        async function loadUserData() {
-            if (userData) return userData;
-            
-            try {
-                // 加载所有JSON数据
-                const responses = await Promise.all(Object.values(JSON_URLS).map(url => fetch(url)));
-                const data = await Promise.all(responses.map(response => response.json()));
-                
-                // 存储数据
-                userData = {
-                    phoneToNumber: data[0],
-                    emailToNumber: data[1],
-                    numberToPassword: data[2],
-                    numberToNickname: data[3],
-                    numberToCurrency: data[4]
-                };
-                
-                return userData;
-            } catch (error) {
-                console.error('加载用户数据失败:', error);
-                throw new Error('无法加载用户数据');
-            }
-        }
-        
         // 验证登录
-        async function verifyLogin(username, password) {
+        function verifyLogin(username, password) {
             try {
-                const data = await loadUserData();
-                
                 // 获取用户编号
                 let userNumber = null;
                 
                 // 检查是手机号还是邮箱
                 if (username.includes('@')) {
                     // 邮箱登录
-                    userNumber = data.emailToNumber[username];
+                    userNumber = userData.emailToNumber[username];
                 } else {
                     // 手机号登录
-                    userNumber = data.phoneToNumber[username];
+                    userNumber = userData.phoneToNumber[username];
                 }
                 
                 if (!userNumber) {
@@ -383,10 +375,10 @@
                 }
                 
                 // 验证密码（明文比较）
-                if (data.numberToPassword[userNumber] === password) {
+                if (userData.numberToPassword[userNumber] === password) {
                     // 获取用户信息
-                    const nickname = data.numberToNickname[userNumber] || '未知用户';
-                    const currency = data.numberToCurrency[userNumber] || '0';
+                    const nickname = userData.numberToNickname[userNumber] || '未知用户';
+                    const currency = userData.numberToCurrency[userNumber] || '0';
                     
                     const userInfo = {
                         number: userNumber,
