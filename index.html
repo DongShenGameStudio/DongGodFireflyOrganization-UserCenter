@@ -396,6 +396,25 @@
             color: var(--primary);
             margin: 8px 0 0 0;
         }
+        
+        /* 新增CN币图标样式 */
+        .cn-coin-icon {
+            position: relative;
+            display: inline-block;
+            font-size: 2.5em;
+            color: white;
+        }
+        
+        .cn-coin-icon .flag {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.55em;
+            line-height: 1;
+            background: none;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -460,7 +479,11 @@
                     </div>
                     <div class="stat-item">
                         <div class="stat-icon">
-                            <i class="fas fa-coins"></i>
+                            <!-- 新的CN币图标 -->
+                            <span class="cn-coin-icon">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <span class="flag">🇨🇳</span>
+                            </span>
                         </div>
                         <div class="stat-info">
                             <h3>CN币</h3>
@@ -496,6 +519,7 @@
     <script>
         // 远程JSON文件地址
         const JSON_URLS = {
+            beijingDate: "https://dongshengamestudio.github.io/DateSynchronizationAPIinChinaBeijing/DateSynchronizationAPIinChinaBeijing.json",
             phoneToNumber: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/UserMobilePhoneNumberCorrespondingNumberTable.json",
             emailToNumber: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/UserEmailAddressNumberToNumberTable.json",
             numberToPassword: "https://dongshengamestudio.github.io/DongGodNetworkTechnologyServiceAPI/Number-To-PasswordTable.json",
@@ -636,6 +660,170 @@
             updateCheckinStatus(userData);
         }
         
+        // 从远程JSON获取北京日期
+        async function getBeijingDateFromRemoteJSON() {
+            try {
+                const response = await fetch(JSON_URLS.beijingDate, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('远程JSON请求失败');
+                }
+                
+                const data = await response.json();
+                
+                // 假设JSON格式为 { "date": "2024-01-01" } 或类似格式
+                if (data.date) {
+                    console.log('从远程JSON获取的日期:', data.date);
+                    return data.date;
+                } else {
+                    throw new Error('远程JSON格式不正确');
+                }
+            } catch (error) {
+                console.error('从远程JSON获取日期失败:', error);
+                throw new Error('远程JSON获取日期失败');
+            }
+        }
+        
+        // 获取北京时间（优先使用远程JSON，失败后使用API列表，最后使用备用API）
+        async function getBeijingTimeFromAPIs() {
+            try {
+                // 优先使用远程JSON获取日期
+                return await getBeijingDateFromRemoteJSON();
+            } catch (error) {
+                console.log('远程JSON获取失败，尝试使用时间API...');
+                
+                // 随机选择10个API进行验证，提高性能
+                const selectedAPIs = [...TIME_APIS]
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 10);
+                
+                const promises = selectedAPIs.map(api => 
+                    fetch(api, { 
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    }).then(response => {
+                        if (!response.ok) throw new Error('API请求失败');
+                        return response.text().then(text => {
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                return text;
+                            }
+                        });
+                    }).then(data => {
+                        // 根据不同API的响应格式提取时间
+                        let timestamp;
+                        
+                        if (api.includes('worldtimeapi')) {
+                            // worldtimeapi.org
+                            return data.datetime.split('T')[0]; // 返回日期部分
+                        } else if (api.includes('taobao')) {
+                            // 淘宝时间API
+                            timestamp = parseInt(data.data.t);
+                            return new Date(timestamp).toISOString().split('T')[0];
+                        } else if (api.includes('apiopen.top')) {
+                            // apiopen.top
+                            return data.result.currentTime.split(' ')[0]; // 返回日期部分
+                        } else if (api.includes('timeapi.io')) {
+                            // timeapi.io
+                            return data.dateTime.split('T')[0]; // 返回日期部分
+                        } else if (api.includes('akamai')) {
+                            // akamai时间API返回的是时间戳
+                            return new Date().toISOString().split('T')[0]; // 使用当前日期作为备用
+                        } else if (api.includes('coindesk')) {
+                            // CoinDesk API
+                            return data.time.updatedISO.split('T')[0];
+                        } else {
+                            // 其他API，使用响应时间作为参考
+                            const responseDate = new Date();
+                            return responseDate.toISOString().split('T')[0];
+                        }
+                    }).catch(error => {
+                        console.warn(`API ${api} 请求失败:`, error);
+                        return null;
+                    })
+                );
+                
+                const results = await Promise.allSettled(promises);
+                const validDates = results
+                    .filter(result => result.status === 'fulfilled' && result.value !== null)
+                    .map(result => result.value);
+                
+                // 如果所有API都失败了，尝试使用备用API
+                if (validDates.length === 0) {
+                    console.log('所有主要API请求失败，尝试使用备用API...');
+                    return getBeijingTimeFromBackupAPI();
+                }
+                
+                // 找出最常见的日期（众数）
+                const dateCounts = {};
+                validDates.forEach(date => {
+                    dateCounts[date] = (dateCounts[date] || 0) + 1;
+                });
+                
+                let mostCommonDate = null;
+                let maxCount = 0;
+                
+                for (const [date, count] of Object.entries(dateCounts)) {
+                    if (count > maxCount) {
+                        mostCommonDate = date;
+                        maxCount = count;
+                    }
+                }
+                
+                // 如果最常见的日期有足够多的API支持（至少3个），则返回该日期
+                if (maxCount >= 3) {
+                    return mostCommonDate;
+                } else {
+                    console.log('时间API结果不一致，尝试使用备用API...');
+                    return getBeijingTimeFromBackupAPI();
+                }
+            }
+        }
+        
+        // 使用备用API获取北京时间
+        async function getBeijingTimeFromBackupAPI() {
+            const params = {
+                "id": "0a6a98cba40651e59d2b9aa4e8106d82",
+                "key": "0a6a98cba40651e59d2b9aa4e8106d82",
+                "type": "2"
+            };
+            
+            const url = "https://cn.apihz.cn/api/time/getapi.php";
+            
+            try {
+                const response = await fetch(url + '?' + new URLSearchParams(params), {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('备用API请求失败');
+                }
+                
+                const data = await response.json();
+                
+                if (data.code === 200) {
+                    // 从返回的时间字符串中提取日期部分
+                    // data.msg 格式为 "2024-01-01 12:00:00"
+                    const datePart = data.msg.split(' ')[0];
+                    console.log('备用API返回的日期:', datePart);
+                    return datePart;
+                } else {
+                    throw new Error('备用API返回错误: ' + data.msg);
+                }
+            } catch (error) {
+                console.error('备用API请求失败:', error);
+                throw new Error('所有时间API都请求失败，包括备用API');
+            }
+        }
+        
         // 更新签到状态
         function updateCheckinStatus(userData) {
             const checkinStatus = document.getElementById('checkinStatus');
@@ -646,7 +834,15 @@
             getBeijingTimeFromAPIs().then(todayDate => {
                 console.log("今天日期:", todayDate, "上次签到日期:", lastCheckinDate);
                 
-                if (lastCheckinDate === todayDate) {
+                // 如果上次签到日期和今天日期不一致，重置签到状态
+                if (lastCheckinDate !== todayDate) {
+                    // 更新本地存储中的签到状态
+                    userData.lastCheckinDate = '';
+                    localStorage.setItem('userInfo', JSON.stringify(userData));
+                }
+                
+                // 更新UI显示
+                if (userData.lastCheckinDate === todayDate) {
                     checkinStatus.textContent = '已签到';
                     checkinStatus.className = 'success';
                     checkinBtn.disabled = true;
@@ -663,94 +859,6 @@
                 checkinStatus.className = 'error';
                 checkinBtn.disabled = true;
             });
-        }
-        
-        // 从多个API获取北京时间
-        async function getBeijingTimeFromAPIs() {
-            // 随机选择10个API进行验证，提高性能
-            const selectedAPIs = [...TIME_APIS]
-                .sort(() => 0.5 - Math.random())
-                .slice(0, 10);
-            
-            const promises = selectedAPIs.map(api => 
-                fetch(api, { 
-                    method: 'GET',
-                    mode: 'cors',
-                    cache: 'no-cache'
-                }).then(response => {
-                    if (!response.ok) throw new Error('API请求失败');
-                    return response.text().then(text => {
-                        try {
-                            return JSON.parse(text);
-                        } catch (e) {
-                            return text;
-                        }
-                    });
-                }).then(data => {
-                    // 根据不同API的响应格式提取时间
-                    let timestamp;
-                    
-                    if (api.includes('worldtimeapi')) {
-                        // worldtimeapi.org
-                        return data.datetime.split('T')[0]; // 返回日期部分
-                    } else if (api.includes('taobao')) {
-                        // 淘宝时间API
-                        timestamp = parseInt(data.data.t);
-                        return new Date(timestamp).toISOString().split('T')[0];
-                    } else if (api.includes('apiopen.top')) {
-                        // apiopen.top
-                        return data.result.currentTime.split(' ')[0]; // 返回日期部分
-                    } else if (api.includes('timeapi.io')) {
-                        // timeapi.io
-                        return data.dateTime.split('T')[0]; // 返回日期部分
-                    } else if (api.includes('akamai')) {
-                        // akamai时间API返回的是时间戳
-                        return new Date().toISOString().split('T')[0]; // 使用当前日期作为备用
-                    } else if (api.includes('coindesk')) {
-                        // CoinDesk API
-                        return data.time.updatedISO.split('T')[0];
-                    } else {
-                        // 其他API，使用响应时间作为参考
-                        const responseDate = new Date();
-                        return responseDate.toISOString().split('T')[0];
-                    }
-                }).catch(error => {
-                    console.warn(`API ${api} 请求失败:`, error);
-                    return null;
-                })
-            );
-            
-            const results = await Promise.allSettled(promises);
-            const validDates = results
-                .filter(result => result.status === 'fulfilled' && result.value !== null)
-                .map(result => result.value);
-            
-            if (validDates.length === 0) {
-                throw new Error('所有时间API都请求失败');
-            }
-            
-            // 找出最常见的日期（众数）
-            const dateCounts = {};
-            validDates.forEach(date => {
-                dateCounts[date] = (dateCounts[date] || 0) + 1;
-            });
-            
-            let mostCommonDate = null;
-            let maxCount = 0;
-            
-            for (const [date, count] of Object.entries(dateCounts)) {
-                if (count > maxCount) {
-                    mostCommonDate = date;
-                    maxCount = count;
-                }
-            }
-            
-            // 如果最常见的日期有足够多的API支持（至少3个），则返回该日期
-            if (maxCount >= 3) {
-                return mostCommonDate;
-            } else {
-                throw new Error('时间API结果不一致，无法确定当前日期');
-            }
         }
         
         // 处理签到
@@ -798,8 +906,8 @@
                 checkinMessage.className = 'checkin-status success';
                 checkinMessage.classList.remove('hidden');
                 
-                // 发送推送通知
-                await sendPushNotification(userInfo, reward);
+                // 发送推送通知（包含签到日期）
+                await sendPushNotification(userInfo, reward, todayDate);
                 
                 // 3秒后隐藏消息
                 setTimeout(() => {
@@ -826,10 +934,10 @@
         }
         
         // 发送推送通知
-        async function sendPushNotification(userInfo, reward) {
+        async function sendPushNotification(userInfo, reward, checkinDate) {
             const token = "d98f0022ed854cdcb5c5d1a03526cab0";
             const title = "用户签到成功";
-            const content = `用户 ${userInfo.nickname} (UID: ${userInfo.number}) 签到成功，获得了${reward}CN币，当前总CN币: ${userInfo.currency}`;
+            const content = `用户 ${userInfo.nickname} (UID: ${userInfo.number}) 在 ${checkinDate} 签到成功，获得了${reward}CN币，当前总CN币: ${userInfo.currency}`;
             
             try {
                 // 使用pushplus发送通知
@@ -867,11 +975,12 @@
                 
                 // 存储数据
                 userData = {
-                    phoneToNumber: data[0],
-                    emailToNumber: data[1],
-                    numberToPassword: data[2],
-                    numberToNickname: data[3],
-                    numberToCurrency: data[4]
+                    beijingDate: data[0],
+                    phoneToNumber: data[1],
+                    emailToNumber: data[2],
+                    numberToPassword: data[3],
+                    numberToNickname: data[4],
+                    numberToCurrency: data[5]
                 };
                 
                 return userData;
